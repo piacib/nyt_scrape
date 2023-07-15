@@ -2,7 +2,7 @@ import puppeteer from "puppeteer";
 import * as fs from "fs";
 import _ from "lodash";
 // import allData from "./data.json" assert { type: "json" };
-const writeDataToJson = (data, name) => {
+export const writeDataToJson = (data, name) => {
   console.log(`writing data to ${name}...`);
   try {
     fs.writeFileSync(name, JSON.stringify(data));
@@ -68,7 +68,7 @@ const parseNYTPage = (expr = "parseAllData") => {
     const guestArr = Array.from(guestNodeList);
     guestArr.forEach((x) => {
       const results = parseEntry(x);
-      data.push(results);
+      data.push(...results);
     });
     return data;
   };
@@ -122,11 +122,12 @@ const scrape = async ({ url, parsePageFunc, fileName = false }) => {
   });
   const scrapeAllData = await page.evaluate(parsePageFunc);
 
-  // Display the quotes
   const data = scrapeAllData;
+  // save data
   if (fileName) {
     writeDataToJson(data, fileName);
   }
+
   // Close the browser
   await browser.close();
   return data;
