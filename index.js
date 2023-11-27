@@ -1,6 +1,28 @@
 import puppeteer from "puppeteer";
 import * as fs from "fs";
 import _ from "lodash";
+import PocketBase from "pocketbase";
+
+const pb = new PocketBase("http://127.0.0.1:8090/");
+const i = 5;
+
+const data = {
+  title: `test${i}`,
+  authors: `JSON${i}`,
+  originalText: `test${i}`,
+  episodeTitle: `test${i}`,
+  airDate: new Date().toDateString(),
+};
+const addEntry = async () => {
+  const authData = await pb.admins.authWithPassword(
+    process.env.POCKETBASEEMAIL,
+    process.env.POCKETBASEPASSWORD
+  );
+  const record = await pb.collection("books").create(data);
+};
+addEntry();
+
+/// *** FETCHES NYT PAGE AND RETURNS ARRAY OF BOOKS PARSED *** ///
 // import allData from "./data.json" assert { type: "json" };
 export const writeDataToJson = (data, name) => {
   console.log(`writing data to ${name}...`);
@@ -34,10 +56,10 @@ const parseNYTPage = (expr = "parseAllData") => {
       if (splitText.length == 2) {
         const unparsedAuthor = splitText[1];
         const authors = unparsedAuthor.split(/ and | , /);
-        books.push({ title, authors });
+        books.push({ title, authors, originalText: text });
         return;
       }
-      books.push({ title, authors: [] });
+      books.push({ title, authors: [], originalText: text });
     });
     return books;
   };
@@ -125,6 +147,7 @@ const scrape = async ({ url, parsePageFunc, fileName = false }) => {
   const data = scrapeAllData;
   // save data
   if (fileName) {
+    writeDataToJson(new Date(), "lastupdated.json");
     writeDataToJson(data, fileName);
   }
 
@@ -138,5 +161,5 @@ const url = "https://www.nytimes.com/article/ezra-klein-show-book-recs.html";
 scrape({
   url,
   parsePageFunc: parseNYTPage,
-  fileName: "data.json",
+  fileName: "data-2021.json",
 });
